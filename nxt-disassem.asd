@@ -9,4 +9,9 @@
   :version "0.0.1"
   :serial t
   :components ((:file "package")
-	       (:file "nxt-disassem")))
+	       (:file "nxt-basic-binary-types")
+	       (:file "nxt-rxe-helper-functions")
+	       (:file "nxt-rxe-file-format")
+	       (:file "nxt-instructions")
+	       (:file "nxt-disassem"))
+  :depends-on (:com.gigamonkeys.binary-data))

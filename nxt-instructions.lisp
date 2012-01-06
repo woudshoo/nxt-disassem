@@ -109,7 +109,36 @@ E.g.  next instruction start = index + (getf return-value :size) / 2
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defgeneric disassem (data opcode format)
   (:documentation "Disassembles the data from the Opcode format into a
-fully parsed format."))
+fully parsed format.
+The argument `data' should be in opcode format, 
+The argument `opcode' is the opcode of the instruction,
+The argument `format' is a boolean which is t for short instructions.
+
+The last two arguments are used for dispatching to the specialized functions
+to fully disasemble the instruction stored in `data'.
+
+An instruction in fully parsed format is
+
+  (address . instruction)
+
+Where instruction is a property list containing
+
+-  :instruction   the instruction, which is either
+                  a symbol naming the instruction
+                  or a list for more complicated instructions
+-  argument name  If an instruction has arguments
+                  the arguments are part of the property 
+                  list with key the argument name
+                  and value the value of the argument
+
+So for example a full instruction is:
+
+   (310 :INSTRUCTION NXT-DISASSEM::FINCLUMP :START -1 :END -1)
+
+or 
+
+   (321 :INSTRUCTION (NXT-DISASSEM::BRCMP <) :OFFSET -2 :SOURCE1 4 :SOURCE2 5)
+"))
 
 ;; Fallback for opcodes that are not known.
 (defmethod disassem ((data list) (opcode t) (short t))
@@ -155,9 +184,9 @@ fully parsed format."))
        ,(let ((result (list)))
 	     (push 'list result)
 	     (push :instruction result)
-	     (push (if (eq 'quote (car instr)) instr
-		       `(,(car instr) ',instr data)
-		       )
+	     (push (if (eq 'quote (car instr)) 
+		       instr
+		       `(,(car instr) ',instr data))
 		       result)
 	     (loop :for arg :in arguments
 		:for i :from 0
@@ -260,7 +289,8 @@ instructions."
 
 
 (defmethod get-targets ((instructions list))
-  "Return a list of jmp/branch targets"
+  "Return a list of jmp/branch target addresses.  
+This function does not remove duplicates."
   (loop :for instr :in instructions
      :for pp = (car instr)
      :for offset = (getf (rest instr) :offset)
@@ -268,6 +298,8 @@ instructions."
      :collect (+ pp offset)))
 
 (defmethod label-targets ((targets list))
+  "Returns a hash-table mapping addresses to label names.
+The input of this function is a list of addresses as created by get-targets."
   (let ((result (make-hash-table)))
     (loop :for offset :in (remove-duplicates targets)
        :for index :from 1

@@ -32,6 +32,44 @@
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+;; this should be constant
+(defparameter +syscallid+
+  (list
+   :nxt-file-open-read
+   :nxt-file-open-write
+   :nxt-file-open-append
+   :nxt-file-read
+   :nxt-file-write
+   :nxt-file-close
+   :nxt-file-resolve-handle
+   :nxt-file-rename
+   :nxt-file-delete
+   :nxt-sound-play-file
+   :nxt-sound-play-tone
+   :nxt-sound-get-state
+   :nxt-sound-set-state
+   :nxt-draw-text
+   :nxt-draw-point
+   :nxt-draw-line
+   :nxt-draw-circle
+   :nxt-draw-rect
+   :nxt-draw-picture
+   :nxt-set-screen-mode
+   :nxt-read-button
+   :nxt-comm-ls-write
+   :nxt-comm-ls-read
+   :nxt-comm-ls-check-status
+   :nxt-random-number
+   :nxt-get-start-tick
+   :nxt-message-write
+   :nxt-message-read
+   :nxt-comm-bt-check-status
+   :nxt-comm-bt-write
+   :nxt-keep-alive
+   :nxt-io-map-read
+   :nxt-io-map-write))
+  
+
 (defun signed-code-word (data index)
   (signed-value (aref data index) 16))
 
@@ -169,13 +207,19 @@ or
 	     (loop :for arg :in arguments
 		:for i :from 0
 		:do
-		(if (listp arg)
-		    (progn
-		      (push (car arg) result)
-		      (push `(subseq arguments ,i) result))
+		(cond
+		  ((and (listp arg) (= 1 (length arg)))
+		   (progn
+		     (push (car arg) result)
+		     (push `(subseq arguments ,i) result)))
+		  ((and (listp arg) (= 2 (length arg)))
+		   (progn
+		     (push (car arg) result)
+		     (push `(nth (nth ,i arguments) ,(second arg)) result)))
+		   (t 
 		    (progn
 		      (push arg result)
-		      (push `(nth ,i arguments) result))))
+		      (push `(nth ,i arguments) result)))))
 	     (reverse result)))))
 
 (defmacro definstruction-short (instr code &rest arguments)
@@ -261,7 +305,7 @@ or
 (definstruction 'subcall #x2e :subroutine :callerid)
 (definstruction 'subret #x2f :callerid)
 
-(definstruction 'syscall #x28 :syscallid :parmcluster)
+(definstruction 'syscall #x28 (:syscallid +syscallid+) :parmcluster)
 (definstruction 'setin #x30 :source :port :propid)
 (definstruction 'setout #x31  :instrsize :port/portlist (:propid-source))
 (definstruction 'getin #x32 :destination :port :propid)

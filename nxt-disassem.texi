@@ -1,0 +1,125 @@
+\input texinfo
+@c %**start of header
+@setfilename nxt-disassem
+@settitle NXT RXE File Reader and Disassembler
+@c %**end of header
+
+@copying
+GPL v3 or later
+
+Copyright @copyright{} 2010,2011 Willem Rein Oudshoorn
+@end copying
+
+@titlepage
+@title NXT RXE File Reader
+@subtitle and Disassembler
+@author Willem Rein Oudshoorn
+
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top Short Sample (what is this?)
+
+@insertcopying
+@end ifnottex
+
+@menu
+
+* Introduction:: Status of the project
+* Disassmbler:: The disassembler
+
+@end menu
+
+@node Introduction
+@chapter Introduction
+
+This is an incomplete parser for the NXT RXE file format.  
+It will be able to generate a disassembly of the byte code present
+in the file, also it contains code to parse the data structures
+and split the static initalization vector into the right components.  
+
+However all the tying together is not done yet.
+
+@section What works
+
+Assuming you have a rxe file like @code{test.rxe} the following 
+(more or less interesting bits) works
+
+@lisp
+(setf *p* (nxt-disassem:parse-nxt-rxe-file "test.rxe"))
+
+(nxt-disassem:print-assembly *p*)
+(nxt-disassem:make-call-graph *p*)
+
+(nxt-disassem::parse-dstoc-table 
+  (nxt-disassem::dstoc-table 
+    (nxt-disassem::data-space *p*)))
+
+(nxt-disassem::default-static-data (nxt-disassem::data-space *p*))
+@end lisp
+
+The @code{parse-dstoc-table} and @code{default-static-data} will
+give lists which have the same structure and the elements correspond.
+That is the entry described in @code{parse-dstoc-table} is 
+initialized, if so required, from the corresponding element in @code{default-static-data}.
+
+@node NXT RXE File Parser
+@chapter NXT RXE File Parser
+
+This part parses a nxt rxe file into CLOS objects by
+using the gigimonkeys binary file reader.
+
+The layout of the RXE file format is documented by Lego/Mindstorm
+and can be found in the document @cite{LEGO® MINDSTORMS® NXT Executable File Specification}.
+
+This document is essential to understand the result of the parser.
+
+The RXE file consists of 4 sections
+@multitable @columnfractions 0.2 0.8
+@headitem Section @tab CLOS class
+@item File Header
+@tab
+@code{rxe-file-header}
+@item Data Space
+@tab
+@code{rxe-data-space}
+@item Clump Records
+@tab
+@code{clump-records}
+@item Code Space
+@tab
+@code{code-words}
+@end multitable
+
+@section rxe-file-header
+
+This is a straight forward mapping from the fields described in
+the LEGO reference guide to CLOS slots
+
+@section rxe-data-space
+
+
+@node Disassembler
+@chapter Disassembler
+
+The disassembler disassembles the `code-words' section of the RXE file.
+The main function is
+
+@deffn Function parse-code data
+
+This takes a vector of 16-bit integers (the NXT bytecodes)  and disassembles it
+to a list of instructions.   Each instruction looks like:
+
+(index :instruction instruction ...)
+
+Where the index is the position in the data vector and the instruction
+is the symbol representing the byte code instruction.
+
+@end deffn
+@bye

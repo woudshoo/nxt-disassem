@@ -195,6 +195,33 @@ or
 
 ;; Macros for defining instructions
 (defmacro definstruction (instr code &rest arguments)
+  "Defines a full nxt-byte code instruction, this takes 3 arguments
+- `instr' which is the \"name\" of the instruction.  Well, name
+   is used loosely here.  What it actually is:
+   - a symbol naming the instruction for non compare instructions
+   - a list looking like (cmp-instr <name>)  for compare instructions.
+- `code' the bytecode indicating the instruction, this is a number
+- `arguments' Arguments indicate the arguments the instruction takes.
+   They are position in the sense that the first element in `arugments'
+   describes the first argumet of the nxt byte code etc.
+   A argument comes at the moment in 3 forms:
+   - a keyword symbol, naming the argument e.g.                 :destination
+   - a keyword symbol between parenthesis e.g.                 (:source)
+     this names an argument with a variable number of values.
+     In the nxt byte code specification, there can only be one
+     of those and it has to be the last argument in the list.
+   - a keyword and a variable between parenthesis e.g.         (:syscallid +syscallid+)
+     where the keyword names an argument that refers to a named
+     constant, the second part e.g. +syscallid+ lists the 
+     names for the possible value (the list value shoudl correspond
+     to the position in the list.
+
+Things to change:
+- The argument specification is very limited and rigid,
+  for example you can not specify multiple values which are named
+- the named constant argument is very inflexible, it is just 
+  a list of names, no mapping is possible.    
+"
   `(defmethod disassem ((data list) (opcode (eql ,code)) (short (eql nil)))
      (let ((arguments (getf data :arguments)))
        ,(let ((result (list)))
@@ -223,6 +250,8 @@ or
 	     (reverse result)))))
 
 (defmacro definstruction-short (instr code &rest arguments)
+  "This defines a nxt-byte code instruction for the short byte code format.
+See for all the options the definstruction documentation."
   `(defmethod disassem ((data list) (opcode (eql ,code)) (short (eql t)))
      (let ((arguments (getf data :arguments)))
        ,(let ((result (list)))

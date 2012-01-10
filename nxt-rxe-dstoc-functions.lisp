@@ -5,6 +5,10 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun dstoc-primary-entry (dstoc-entry)
+  "If a dstoc-entry is an aggregation type, returns
+the entry indicating what type of aggregation it is, instead
+of the complete entry.   For non aggergation tyep entries
+return the `dstoc-entry' as is."
   (if (listp dstoc-entry) (car dstoc-entry) dstoc-entry))
 
 (defun dstoc-type (dstoc-entry)
@@ -49,7 +53,12 @@ entries list."
       (t (values top-entry entries)))))
 
 (defun parse-dstoc-table (dstoc-table)
-  "Return the tree of parsed dstoc entries stored in data-space."
+  "Return the tree of parsed dstoc entries stored in data-space.
+This function takes a flat list of dstoc entries as argument 
+and returns the dstoc entries in tree form.  
+In the tree form representation the aggregation entries 
+will be represented by one entrie (which in turn describes
+its components."
   (let ((result (list))
 	(entries (coerce dstoc-table 'list)))
     (loop :while (> (length entries) 0)

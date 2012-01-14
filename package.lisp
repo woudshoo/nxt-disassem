@@ -25,7 +25,11 @@
    #:fire-count
    #:dependency-count
    #:code-start-offset
-   #:parse-code))
+   #:parse-code
+   #:dstoc-table
+   #:dstoc-table
+   #:runtime-static-initial-memory
+   #:dope-vector))
 
 (pushnew :nxt-disassem *features*)
 

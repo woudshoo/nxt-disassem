@@ -68,3 +68,52 @@ its components."
 	 (setf entries rest)
 	 (push entry result)))
     (reverse result)))
+
+
+
+;;; Completely silly method of trying to fill the memory.  
+#+nil (defun static-data-initial-memory (dstoc-tree static-data)
+  "Return a byte array containing the initial static data
+layout correctly."
+
+  (let ((result (list))
+	(index 0))
+    
+    (labels ((align (b)
+	       (loop :until (eql 0 (ldb (byte b 0) index)) 
+		  :do
+		  (push 0 result)
+		  (incf index)))
+	     (add-byte (b) (push b result) (incf index))
+	     (add-word (w) 
+	       (align 1)
+	       (push (ldb (byte 8 0) w) result)
+	       (push (ldb (byte 8 8) w) result)
+	       (incf index 2))
+	     (add-long (w) 
+	       (align 2)
+	       (push (ldb (byte 8 0) w) result)
+	       (push (ldb (byte 8 8) w) result)
+	       (push (ldb (byte 8 16) w) result)
+	       (push (ldb (byte 8 24) w) result)
+	       (incf index 4))
+	     (data (data from-file)
+	       (if from-file data 0))
+	     (map-entry (entry data)
+	       (let ((from-file (dstoc-initial-content-from-file entry)))
+		 (case (dstoc-type entry)
+		   (:tc-void nil)
+		   ((:tc-ubyte :tc-sbyte) (add-byte (data data from-file)))
+		   ((:tc-uword :tc-sword :tc-array) (add-word (data data from-file)))
+		   ((:tc-ulong :tc-slong :tc-mutex) (add-long (data data from-file)))
+		   (:tc-cluster (loop 
+				   :for c-entry :in (rest entry) 
+				   :for c-data :in data
+				   :do (map-entry c-entry c-data))
+				)))))
+      
+      (loop :for toc-entry :in dstoc-tree
+	 :for data-entry :in static-data
+	 :do (map-entry toc-entry data-entry)))
+
+    (reverse result)))

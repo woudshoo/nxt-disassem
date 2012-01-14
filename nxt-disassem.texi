@@ -104,6 +104,32 @@ the LEGO reference guide to CLOS slots
 
 @section rxe-data-space
 
+@section Dope Vector
+
+The dope vector has 5 fields: 
+
+@itemize 
+@item 
+offset - Offset of the data in the dataspace area
+@item
+element size - The size of each element of the vector
+@item 
+element count - The number of elements in the array
+@item
+back pointer - According to the documentation the backpointer is ignored
+@item 
+link index - making a linked list of the dope entries
+@end itemize
+
+The documentation of the back pointer entry states that it is ignored.
+However the files I have seen indicate that it points to the
+entry in the dataspace which points to this dope entry.
+
+The other inconsistency I noticed is that according to the
+documentation the link index can never be 0 for non root dva, but the
+files have 0.  It seems that the root DV is included in the linked
+list, following all other rules.
+
 
 @node Disassembler
 @chapter Disassembler

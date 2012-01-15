@@ -12,5 +12,6 @@
 (defmethod default-dynamic-data ((file nxt-rxe-file))
   (default-dynamic-data (data-space file)))
 
-(defmethod runtime-static-initial-memory ((file nxt-rxe-file))
+#+nil (defmethod runtime-static-initial-memory ((file nxt-rxe-file))
   (static-data-initial-memory (parse-dstoc-table (dstoc-table file)) (default-static-data file)))
+

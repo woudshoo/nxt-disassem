@@ -75,6 +75,47 @@ by parse-nxt-rxe-file."
   (format t "~&"))
 
 
+#|
+(defun print-data (name data dstoc-entry dope-vector dynamic-data dynamic-data-offset)
+  "Prints a single instruction"
+  (case (dstoc-type dstoc-entry)
+    (:tc-cluster 
+     (format t "(~A~%" name)
+     (loop :for sub-entry :in (rest dstoc-entry)
+	:for sub-data :in data
+	:for index :from 1
+	:for sub-name = (format nil "~A.~A" name index)
+	:do 
+	(print-data sub-name sub-data sub-entry dope-vector dynamic-data dynamic-data-offset ))
+     (format t ")~%"))
+    
+    (:tc-array)
+    ( t 
+     (format t "(~A ~A ~A)~%" name (dstoc-type dstoc-entry) data))))
+
+(defun print-initial-data (p)
+  "Prints a user understandable version of the initial variables with initial values.
+The printed format is:
+
+ (short V1 10)
+ (cluster V2 
+   (short V2.1 0)
+   (array V2.2 #((short V2.2.1 10) (short V2.2.2 100))))
+ "
+  (let ((dd (default-dynamic-data p))
+	(do (static-size (data-space-header p)))
+	(dstoc-tree (parse-dstoc-table (dstoc-table p)))
+	(data (default-static-data p)))
+    (loop 
+       :for dstoc-entry :in dstoc-tree
+       :for data-entry :in data
+       :for index :from 1
+       :for name = (format nil "V~A" index)
+       :do
+       (print-data name data-entry dstoc-entry nil dd do))))
+
+|#
+
 (defun make-call-graph (p &optional (s t))
   "Writes the call graph of program `p' in the graphviz DOT file format to the stream `s'.
 `p' should be an instance of the nxt-rxe-file class as can be obtained by parse-nxt-rxe-file.

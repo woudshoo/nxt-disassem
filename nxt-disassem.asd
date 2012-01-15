@@ -15,5 +15,6 @@
 	       (:file "nxt-rxe-file-functions")
 	       (:file "nxt-instructions")
 	       (:file "nxt-disassem")
-	       (:file "dope-vector"))
+	       (:file "dope-vector")
+	       (:file "nxt-data"))
   :depends-on (:com.gigamonkeys.binary-data))

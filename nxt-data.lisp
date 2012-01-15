@@ -8,43 +8,46 @@
 (in-package :nxt-disassem)
 
 
+(defun create-full-dstoc-entry (dstoc-entry data-area dope-vector &optional (offset 0))
+  "Takes a dstoc entry and returns (dstoc-entry . initial-value).
+Note that this most likely will not work correctly yet for
+arrays inside arrays.
 
-(defun create-full-dstoc-entry (dstoc-entry static-data-entry 
-				dope-vector dynamic-data dynamic-data-offset)
-  "Returns the dstoc entry together with the data values filled in.
+As another side note, this should be replaced/merged
+with the dstoc parsing code."
+  (labels 
+      ((read-value (location width)
+	 (let ((result 0))
+	   (loop :repeat width
+	      :for index :from 0
+	      :for loc :from (+ location offset)
+	      :do
+	      (setf (ldb (byte 8 (* 8 index)) result) (aref data-area loc)))
+	   result)))
+    
+    (case (dstoc-type dstoc-entry)
+      ((:tc-ubyte :tc-sbyte) (cons dstoc-entry (read-value (data-descriptor dstoc-entry) 1)))
+      ((:tc-uword :tc-sword) (cons dstoc-entry (read-value (data-descriptor dstoc-entry) 2)))
+      ((:tc-ulong :tc-slong :tc-mutex) (cons dstoc-entry (read-value (data-descriptor dstoc-entry) 4)))
+      ((:tc-cluster) (cons (first dstoc-entry) 
+			 (loop :for entry :in (rest dstoc-entry) :collect (create-full-dstoc-entry entry data-area dope-vector))))
+      ((:tc-array) (cons (first dstoc-entry)
+			 (or nil (loop 
+				    :with entry = (second dstoc-entry)
+				    :with dv-index = (read-value (data-descriptor (first dstoc-entry)) 2)
+				    :with dv = (nth dv-index dope-vector)
+				    :repeat (element-count dv)
+				    :for entry-loc = (offset dv) :then (+ entry-loc (element-size dv))
+				    :collect (create-full-dstoc-entry entry data-area dope-vector entry-loc))))))))
 
-The mapping is as follows:
-
-  - simple cases
-     dstoc-entry --->  (dstoc-entry . value)
-  - cluster
-     (dstoc-entry sub-entryes...)  ---> (dstoc-entry . converted sub-entries)
-  - array
-    (dstoc-entry sub-entry) ---> (sub-entry . #(values ..))"
-
-  (let ((entry-type (dstoc-type dstoc-entry)))
-    (case entry-type
-      (:tc-cluster 
-       (cons dstoc-entry (mapcar (lambda (s1 s2) 
-				   (create-full-dstoc-entry s1 s2
-							    dope-vector dynamic-data
-							    dynamic-data-offset)) 
-				 (rest dstoc-entry) static-data-entry)))
-      (:tc-array 
-       (let ((se (second dstoc-entry)))
-	 (cons se
-	       "not implemented"
-	       )))
-      (t (cons dstoc-entry 
-	       (if (dstoc-initial-content-from-file dstoc-entry)
-		   static-data-entry 
-		   0))))))
 
 
 (defun test-create-full (p)
-  (loop :for entry :in (parse-dstoc-table (dstoc-table p))
-     :for data :in (default-static-data p)
-     :collect (create-full-dstoc-entry entry data nil nil nil)))
+  (loop
+     :with data = (create-data-area p)
+     :with dope-vector = (dope-vector p)
+     :for entry :in (parse-dstoc-table (dstoc-table p))
+     :collect (create-full-dstoc-entry entry data dope-vector)))
 
 
 (defun create-data-area (p)

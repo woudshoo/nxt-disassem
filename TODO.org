@@ -1,0 +1,8 @@
+* Code improvements
+
+** TODO get rid of advanced parsing of dstoc during reading of file
+
+   The reading of the file should be simple, just read the content.
+   THe parsing should be done in separate step.
+
+

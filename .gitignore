@@ -1,0 +1,16 @@
+*~
+*.aux
+*.cp
+*.fn
+*.fns
+*.ky
+*.log
+*.pdf
+*.pg
+*.toc
+*.tp
+*.vr
+*.dx64fsl
+README.html
+
+

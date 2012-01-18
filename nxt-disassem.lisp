@@ -52,6 +52,39 @@ Returns nil if the address is not the start of a clump,
 or returns the clump index if it is the start of a clump."
   (position address fixed-clump-records :test #'eql :key #'code-start-offset))
 
+(defun print-data (p)
+  "Print data section in somewhat user friendly format."
+  (print-entries (test-create-full p)))
+
+(defun print-entries (p &optional (stream t) (indent 0))
+  "Prints a list of data entries to `stream'.
+This function is very ugly and needs to be restructured.
+One day I should understand how the pretty printer works."
+  (loop 
+     :with indent-string = (coerce (make-array indent :initial-element #\Space) 'string)
+     :for entry :in p
+     :for index :from 1
+     :for type = (type (car entry))
+     :for value = (cdr entry)
+     :do
+     (case type
+       (:tc-cluster (format stream "~A~A V~D = {~%" indent-string
+			    type index)
+		    (print-entries value stream (+ indent 4))
+		    (format stream "~A}~%" indent-string))
+       (:tc-array (format stream "~A~A V~D = (" indent-string type index)
+		  (if value
+		      (progn
+			(format stream "~%")
+			(print-entries value stream (+ indent 4))
+			(format stream "~A)~%" indent-string))
+		      (format stream ")~%")))
+       (:tc-ubyte 	
+	(format stream "~A~A V~D = ~A ; ~A~%" indent-string type index value
+		(code-char value)))
+       (otherwise
+	(format stream "~A~A V~D = ~A~%" indent-string type index value)))))
+
 (defun print-assembly (p)
   "Prints a user readable version of the assembly code
 contained in the program `p'.  The argument `p' should

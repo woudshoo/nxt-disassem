@@ -29,7 +29,8 @@
    #:dstoc-table
    #:dstoc-table
    #:runtime-static-initial-memory
-   #:dope-vector))
+   #:dope-vector
+   #:print-data))
 
 (pushnew :nxt-disassem *features*)
 
